@@ -1,1 +1,2 @@
 # MyLittleKanban
+docker compose -f compose.yaml up -d --build

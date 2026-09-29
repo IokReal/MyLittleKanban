@@ -4,13 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <script src="skripts.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Kanban Board</title>
 
+    <!-- Шаблон карточки и колонки -->
     <div id="tamplate" style="display: none;">
         <div class="tab">
             <h2>{tab_name}</h2>
+            
+            <!-- Кнопка добавления задачи в конкретную колонку -->
+            <button data-tab-name="{tab_name}" onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
+            
             <div class="tasks-list">
                 <div class="task">
                     <h2>{tasks_name}</h2>
@@ -23,17 +28,39 @@
 </head>
 
 <body onload="init()">
+    <header style="padding: 1rem;">
+        <!-- Кнопка создания новой колонки -->
+        <button onclick="addNewTab()">+ Создать колонку</button>
+    </header>
+
     <main>
         <div id="tabs"></div>
     </main>
+
+    <!-- Модальное окно перемещения -->
     <dialog id="move_dialog">
         <p>переместить в</p>
-
-        <select id="move_dialog_select">
+        <select id="move_dialog_select" onchange="confirmMoveTask()">
             <option value="">Отмена</option>
         </select>
-
         <p><button onclick="document.getElementById('move_dialog').close();">Отмена</button></p>
+    </dialog>
+
+    <!-- Модальное окно создания задачи -->
+    <dialog id="add_task_dialog">
+        <form onsubmit="confirmAddTask(event)">
+            <h3>Новая задача</h3>
+            <p>
+                <input type="text" id="new_task_name" placeholder="Название задачи" required>
+            </p>
+            <p>
+                <textarea id="new_task_text" placeholder="Описание задачи"></textarea>
+            </p>
+            <menu>
+                <button type="button" onclick="document.getElementById('add_task_dialog').close();">Отмена</button>
+                <button type="submit">Создать</button>
+            </menu>
+        </form>
     </dialog>
 </body>
 
