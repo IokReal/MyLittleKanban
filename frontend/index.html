@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="skripts.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <div id="tamplate" style="display: none;">
+        <div class="tab">
+            <h2>{tab_name}</h2>
+            <div class="tasks-list">
+                <div class="task">
+                    <h2>{tasks_name}</h2>
+                    <h3>{text}</h3>
+                    <button data-task-Name="{tasks_name}" onclick="muveTask(this)">изменить статус</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</head>
+
+<body onload="init()">
+    <main>
+        <div id="tabs"></div>
+    </main>
+    <dialog id="move_dialog">
+        <p>переместить в</p>
+
+        <select id="move_dialog_select">
+            <option value="">Отмена</option>
+        </select>
+
+        <p><button onclick="document.getElementById('move_dialog').close();">Отмена</button></p>
+    </dialog>
+</body>
+
+</html>

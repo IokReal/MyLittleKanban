@@ -1,0 +1,19 @@
+div{
+    outline: 1px solid black;
+}
+
+#tabs{
+    display: flex;
+    padding: 20px;
+}
+.tab{
+    padding: 20px;
+
+}
+.task{
+    padding: 20px;
+}
+
+.text-switch::before{
+    content: "switch mode";
+}
