@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <script src="testData.js"></script>
     <script src="skripts.js"></script>
     <link rel="stylesheet" href="/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +13,10 @@
     <div id="tamplate" style="display: none;">
         <div class="tab">
             <h2>{tab_name}</h2>
-            
+
             <!-- Кнопка добавления задачи в конкретную колонку -->
             <button data-tab-name="{tab_name}" onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
-            
+
             <div class="tasks-list">
                 <div class="task">
                     <h2>{tasks_name}</h2>
@@ -29,11 +30,16 @@
 
 <body onload="init()">
     <header style="padding: 1rem;">
-        <!-- Кнопка создания новой колонки -->
-        <button onclick="addNewTab()">+ Создать колонку</button>
+        <p>
+            текуий проект:  
+            <select id="project_select" onchange="selectProject()" onclick="updateSelectProject()">
+                <option value="">default</option>
+            </select>
+        </p>
     </header>
 
     <main>
+        <button onclick="addNewTab()">+ Создать колонку</button>
         <div id="tabs"></div>
     </main>
 

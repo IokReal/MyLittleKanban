@@ -1,40 +1,14 @@
-const testData = [
-    {
-        "tab_name": "test name 1",
-        "tasks":[
-            {
-                "tasks_name":"tdk task1",
-                "text":"bla bla bla"
-            },
-            {
-                "tasks_name":"second task2",
-                "text":"another text"
-            }
-        ]
-    },
-    {   
-        "tab_name": "test name 2",
-        "tasks":[
-            {   
-                "tasks_name":"tdk task3",
-                "text":"bla bla bla"
-            },
-            {
-                "tasks_name":"second task4",
-                "text":"another text"
-            }
-        ]
-    },
-];
-
+const DEBUG = true;
+const testData = window.testData;
 var tasksData = [];
 var currentMovingTaskName = null;
-var currentTargetTabForNewTask = null; // Запоминаем, в какой таб добавляем задачу
+var currentTargetTabForNewTask = null;
+var selectedProject = null;
 
 function render() {
     const tabsContainer = document.getElementById("tabs");
     tabsContainer.innerHTML = "";
-    
+
     const templateContainer = document.getElementById("tamplate");
     const tabTemplateHtml = templateContainer.querySelector(".tab").outerHTML;
     const taskTemplateHtml = templateContainer.querySelector(".task").outerHTML;
@@ -45,14 +19,13 @@ function render() {
             let taskHtml = taskTemplateHtml
                 .replaceAll("{tasks_name}", task.tasks_name)
                 .replace("{text}", task.text);
-                
+
             allTasksHtml += taskHtml;
         });
 
         let tabHtml = tabTemplateHtml
-            .replace("{tab_name}", tab.tab_name)
-            .replace("{tab_name}", tab.tab_name) // На случай, если {tab_name} встречается несколько раз в шаблоне
-            .replace(taskTemplateHtml, allTasksHtml); 
+            .replaceAll("{tab_name}", tab.tab_name)
+            .replace(taskTemplateHtml, allTasksHtml);
 
         tabsContainer.insertAdjacentHTML("beforeend", tabHtml);
     });
@@ -61,7 +34,7 @@ function render() {
 function updateDialog() {
     const form = document.getElementById("move_dialog_select");
     form.innerHTML = '<option value="" disabled selected>Выберите колонку...</option>';
-    
+
     tasksData.forEach(tab => {
         form.innerHTML += `<option value="${tab.tab_name}">${tab.tab_name}</option>`;
     });
@@ -101,22 +74,20 @@ function confirmMoveTask() {
     render();
 }
 
-// ---------------- ПОДОБРАННЫЕ ФУНКЦИИ ДОБАВЛЕНИЯ ----------------
-
 // 1. Открытие модального окна создания задачи
 function openAddTaskDialog(buttonElement) {
     currentTargetTabForNewTask = buttonElement.dataset.tabName;
-    
+
     // Очищаем инпуты
     document.getElementById("new_task_name").value = "";
     document.getElementById("new_task_text").value = "";
-    
+
     document.getElementById("add_task_dialog").showModal();
 }
 
 // 2. Добавление новой задачи в массив
 function confirmAddTask(event) {
-    event.preventDefault(); // Предотвращаем перезагрузку страницы при отправке формы
+    event.preventDefault();
 
     const name = document.getElementById("new_task_name").value.trim();
     const text = document.getElementById("new_task_text").value.trim();
@@ -142,7 +113,6 @@ function addNewTab() {
     const tabName = prompt("Введите название новой колонки:");
     if (!tabName) return;
 
-    // Проверяем, нет ли уже колонки с таким именем
     const exists = tasksData.some(tab => tab.tab_name.toLowerCase() === tabName.trim().toLowerCase());
     if (exists) {
         alert("Колонка с таким названием уже существует!");
@@ -157,8 +127,48 @@ function addNewTab() {
     render();
 }
 
-async function init(){
+// 4. проэкт
+function selectProject() {
+    const projectSelect = document.getElementById("project_select");
+
+    if (DEBUG) {
+        const selectedProject = testData.find(
+            prj => prj.projectName === projectSelect.value
+        );
+
+        if (selectedProject) {
+            tasksData = selectedProject.data;
+        }
+    }
+
+    render();
+}
+
+async function updateSelectProject() {
+    const projectSelect = document.getElementById("project_select");
+    const selectedValue = projectSelect.value;
+
+    projectSelect.innerHTML = "";
+
+    if (DEBUG) {
+        testData.forEach(project => {
+            const option = document.createElement("option");
+
+            option.value = project.projectName;
+            option.textContent = project.projectName;
+
+            projectSelect.appendChild(option);
+        });
+    }
+
+    if (selectedValue) {
+        projectSelect.value = selectedValue;
+    }
+}
+
+async function init() {
     "use strict";
-    tasksData = testData;
+    tasksData = testData[0]["data"];
+    updateSelectProject()
     render();
 }

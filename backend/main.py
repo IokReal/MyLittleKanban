@@ -1,9 +1,8 @@
 from fastapi import FastAPI, Header, Cookie, Response, status
 from typing import Optional
+from fastapi.responses import JSONResponse
 import hashlib
-import time
-from typing import Optional
-from fastapi import FastAPI, Cookie, Header, Response, status
+import time, secrets
 
 app = FastAPI()
 
@@ -12,6 +11,7 @@ PROOF_DIFFICULTY = "0000"
 MAX_AGE_SECONDS = 600
 SECRET_SALT = "BigfishForCat"
 
+users = []
 
 @app.get("/api/v1/check-bot")
 async def check_bot(
@@ -53,3 +53,11 @@ async def check_bot(
 @app.get("/api/v1/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.post("/api/v1/login")
+async def login():
+    token = secrets.token_urlsafe(32)
+    content = {"message": "Come to the dark side, we have cookies"}
+    response = JSONResponse(content=content)
+    response.set_cookie(key="login", value=str(content))
+    return response

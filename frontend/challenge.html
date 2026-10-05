@@ -58,7 +58,7 @@
 
                 if (hash.startsWith("0000")) {
                     document.cookie = `pow_token=${timestamp}:${nonce}:${hash}; path=/; max-age=600; SameSite=Lax`;
-                    nonceEl.textContent = "решино:" + hash
+                    nonceEl.textContent = "решено:" + hash
                     await new Promise(resolve => setTimeout(resolve, 500));
                     location.reload();
                     break;
