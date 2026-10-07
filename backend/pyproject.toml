@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "asqlite3>=0.0.1",
+    "bcrypt>=5.0.0",
     "fastapi[standard]>=0.141.1",
     "uvicorn>=0.54.0",
 ]
