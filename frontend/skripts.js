@@ -61,7 +61,7 @@ function muveTask(buttonElement) {
     document.getElementById("move_dialog").showModal();
 }
 
-function confirmMoveTask() { //TODO
+function confirmMoveTask() {
     const select = document.getElementById("move_dialog_select");
     const targetTabId = Number(select.value);
 
@@ -148,8 +148,10 @@ async function selectProject() {
             tasks: tasks.filter(t => t[3] === group[0]).map(t => ({
                 task_id: t[0],
                 tasks_name: t[1],
-                text: t[2]
+                text: t[2],
+                order: t[3]
             }))
+            .sort((a, b) => a.order - b.order)
         }));
 
         render();
@@ -205,7 +207,6 @@ async function confirmAddTab(event) {
 
         if (!response.ok) throw new Error("Не удалось создать колонку на сервере");
 
-        // После успешного создания просто перезагружаем данные проекта
         document.getElementById("addNewTab_dialog").close();
         await selectProject();
     } catch (error) {
@@ -213,9 +214,18 @@ async function confirmAddTab(event) {
         alert("Ошибка при создании колонки");
     }
 }
+async function validSesion() {
+    const response = await fetch('/api/v1/user/display_name');
+    if (response.status === 401){
+        window.location.href = "/login";
+        await new Promise(r => setTimeout(r, 100));
+    }
+}
 
 async function init() {
     "use strict";
+    await validSesion();
+
     await updateSelectProject();
     
     const projectSelect = document.getElementById("project_select");

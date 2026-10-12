@@ -1,4 +1,7 @@
 # main.py
+
+#Abandon hope, all you who enter here
+
 from contextlib import asynccontextmanager
 from fastapi import Form, FastAPI, Header, Cookie, Response, status, Depends, Request
 from pwdlib import PasswordHash
@@ -16,26 +19,15 @@ DB_VERSION = 1
 PROOF_DIFFICULTY = "0000"
 MAX_AGE_SECONDS = 600
 SECRET_SALT = "BigfishForCat"
-
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-
-DB_VERSION = 1
-PROOF_DIFFICULTY = "0000"
-MAX_AGE_SECONDS = 600
-SECRET_SALT = "BigfishForCat"
-Db_PATH = "/app/data/AppData.db"
-
-if platform.system() == "Windows": 
-    Db_PATH = "./../data/AppData.db"
+DB_PATH = "./../data/AppData.db"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("ЗАПУСК")
-    if not os.path.isfile(Db_PATH):
+    if not os.path.isfile(DB_PATH):
         print(f"Создание файла БД")
 
-    app.state.db = sqlite3.connect(Db_PATH)
+    app.state.db = sqlite3.connect(DB_PATH)
     db = app.state.db
     db.execute("PRAGMA foreign_keys = ON;")
 
@@ -189,17 +181,17 @@ async def login(redirect_to: str = "/",
     response.set_cookie(key="login", value=str(sesion), httponly=True)
     return response
 
-@app.post("/api/v1/login_guest")
-async def login():
-    cursor = app.state.db.cursor()
+# @app.post("/api/v1/login_guest")
+# async def login():
+#     cursor = app.state.db.cursor()
 
-    sesion = secrets.token_urlsafe(32)
-    cursor.execute("INSERT INTO sessions VALUES (?, ?, ?);", (sesion, 1, int(time.time())))
-    app.state.db.commit()
+#     sesion = secrets.token_urlsafe(32)
+#     cursor.execute("INSERT INTO sessions VALUES (?, ?, ?);", (sesion, 1, int(time.time())))
+#     app.state.db.commit()
 
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(key="login", value=str(sesion), httponly=True)
-    return response
+#     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+#     response.set_cookie(key="login", value=str(sesion), httponly=True)
+#     return response
 
 
 
@@ -271,7 +263,7 @@ async def get_project_groups(project_id: int, user: int = Depends(get_current_us
         return Response(status_code=404, content=":(")
 
     groups_query = """
-        SELECT id, name, project_id 
+        SELECT id, name, project_id, "order"
         FROM task_group 
         WHERE project_id = ?;
     """

@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход в систему</title>
     <link href="/bootstrap.min.css" rel="stylesheet">
     <script type="module" src="/bootstrap.bundle.min.js" defer></script>
-    <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
     <main class="login-card">
         <h2>Авторизация/регистрация</h2>
@@ -15,28 +16,18 @@
         <form action="/api/v1/login" method="POST" class="login-form">
             <div class="form-group">
                 <label for="username">Логин или <s>Email</s></label>
-                <input 
-                    type="text" 
-                    name="username" 
-                    id="username" 
-                    placeholder="Введите логин" 
-                    required 
-                    autocomplete="username"
-                >
+                <input type="text" name="username" id="username" placeholder="Введите логин" required
+                    autocomplete="username">
             </div>
 
             <div class="form-group">
                 <label for="password">Пароль</label>
-                <input 
-                    type="password" 
-                    name="password" 
-                    id="password" 
-                    placeholder="Введите пароль" 
-                    required 
-                    autocomplete="current-password"
-                >
+                <input type="password" name="password" id="password" placeholder="Введите пароль" required
+                    autocomplete="current-password">
             </div>
-
+            <div class="otp" data-bs-otp>
+                <input type="text" class="otp-input" maxlength="6" aria-label="Verification code" name="otp" id="otp">
+            </div>
             <button type="submit" class="btn-submit">Войти</button>
         </form>
         <form action="/api/v1/login_guest" method="POST" class="login-form">
@@ -44,4 +35,5 @@
         </form>
     </main>
 </body>
+
 </html>

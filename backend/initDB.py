@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS "project" (
 CREATE TABLE IF NOT EXISTS "task_group" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
+    "order"	INTEGER DEFAULT 0,
     "project_id" INTEGER NOT NULL,
     FOREIGN KEY("project_id") REFERENCES "project"("id") ON DELETE CASCADE
 );
