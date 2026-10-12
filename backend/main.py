@@ -19,7 +19,9 @@ DB_VERSION = 1
 PROOF_DIFFICULTY = "0000"
 MAX_AGE_SECONDS = 600
 SECRET_SALT = "BigfishForCat"
-DB_PATH = "./../data/AppData.db"
+DB_PATH = "/app/data/AppData.db"
+if platform.system() == "Windows":
+    DB_PATH = "./../data/AppData.db"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
