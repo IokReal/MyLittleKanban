@@ -3,69 +3,106 @@
 
 <head>
     <meta charset="UTF-8">
-    <script src="testData.js"></script>
-    <script src="skripts.js"></script>
-    <link rel="stylesheet" href="/style.css">
+    <script src="skripts.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Board</title>
 
+    <link href="/bootstrap.min.css" rel="stylesheet">
+    <script type="module" src="/bootstrap.bundle.min.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+
     <!-- Шаблон карточки и колонки -->
-    <div id="tamplate" style="display: none;">
-        <div class="tab">
-            <h2>{tab_name}</h2>
+    <div id="tamplate" class="d-none">
+        <div class="tab card bg-light shadow-sm p-3 me-3 flex-shrink-0" style="min-width: 10%; max-width: 20%;" data-task_group_id="{task_group_id}">
+            <h4 class="card-title text-dark fw-bold mb-3">{tab_name}</h4>
 
             <!-- Кнопка добавления задачи в конкретную колонку -->
-            <button data-tab-name="{tab_name}" onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
+            <button class="btn btn-outline-primary btn-sm mb-3 w-100" data-tab-id="{task_group_id}" onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
 
-            <div class="tasks-list">
-                <div class="task">
-                    <h2>{tasks_name}</h2>
-                    <h3>{text}</h3>
-                    <button data-task-Name="{tasks_name}" onclick="muveTask(this)">изменить статус</button>
+            <div class="tasks-list d-flex flex-column gap-2">
+                <div class="task card border shadow-sm p-2" data-task_id="{task_id}">
+                    <h5 class="h6 fw-bold text-primary mb-1">{tasks_name}</h5>
+                    <p class="small text-muted mb-2">{text}</p>
+                    <button class="btn btn-sm btn-outline-secondary align-self-start" data-task-id="{task_id}" onclick="muveTask(this)">изменить статус</button>
                 </div>
             </div>
         </div>
     </div>
 </head>
 
-<body onload="init()">
-    <header style="padding: 1rem;">
-        <p>
-            текуий проект:  
-            <select id="project_select" onchange="selectProject()" onclick="updateSelectProject()">
-                <option value="">default</option>
-            </select>
-        </p>
+<body class="bg-body-tertiary min-vh-100 d-flex flex-column" onload="init()">
+    <header class="navbar navbar-dark bg-dark shadow-sm px-4 mb-4">
+        <div class="container-fluid d-flex align-items-center gap-3">
+            <span class="navbar-brand mb-0 h1"><img src="favicon.ico" alt="Icon" class="d-inline-block rounded align-text-top">  My Little Kanban</span>
+            <div class="d-flex align-items-center gap-2">
+                <label for="project_select" class="text-white-50 small mb-0">Текущий проект:</label>
+                <select id="project_select" class="form-select form-select-sm w-auto" onchange="selectProject()">
+                    <option value="">Загрузка...</option>
+                </select>
+            </div>
+        </div>
     </header>
 
-    <main>
-        <button onclick="addNewTab()">+ Создать колонку</button>
-        <div id="tabs"></div>
+    <main class="container-fluid px-4 flex-grow-1 d-flex flex-column">
+        <div class="mb-4">
+            <button class="btn btn-primary" onclick="openAddTabDialog()">+ Создать колонку</button>
+        </div>
+        <!-- Контейнер колонок с горизонтальным скроллом, если колонок много -->
+        <div id="tabs" class="d-flex flex-row align-items-start overflow-auto pb-4 flex-grow-1"></div>
     </main>
 
     <!-- Модальное окно перемещения -->
-    <dialog id="move_dialog">
-        <p>переместить в</p>
-        <select id="move_dialog_select" onchange="confirmMoveTask()">
-            <option value="">Отмена</option>
-        </select>
-        <p><button onclick="document.getElementById('move_dialog').close();">Отмена</button></p>
+    <dialog id="move_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
+        <h5 class="mb-3">Переместить в колонку</h5>
+        <div class="mb-3">
+            <select id="move_dialog_select" class="form-select" onchange="confirmMoveTask()">
+                <option value="">Выберите колонку...</option>
+            </select>
+        </div>
+        <div class="text-end">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('move_dialog').close();">Отмена</button>
+        </div>
     </dialog>
 
     <!-- Модальное окно создания задачи -->
-    <dialog id="add_task_dialog">
+    <dialog id="add_task_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
         <form onsubmit="confirmAddTask(event)">
-            <h3>Новая задача</h3>
-            <p>
-                <input type="text" id="new_task_name" placeholder="Название задачи" required>
-            </p>
-            <p>
-                <textarea id="new_task_text" placeholder="Описание задачи"></textarea>
-            </p>
-            <menu>
-                <button type="button" onclick="document.getElementById('add_task_dialog').close();">Отмена</button>
-                <button type="submit">Создать</button>
-            </menu>
+            <h5 class="mb-3">Новая задача</h5>
+            <div class="mb-3">
+                <input type="text" id="new_task_name" class="form-control" placeholder="Название задачи" required>
+            </div>
+            <div class="mb-3">
+                <textarea id="new_task_text" class="form-control" placeholder="Описание задачи" rows="3"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('add_task_dialog').close();">Отмена</button>
+                <button type="submit" class="btn btn-success btn-sm">Создать</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Модальное окно ошибки -->
+    <dialog id="cannot_loadPproject_data_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
+        <form method="dialog">
+            <h5 class="text-danger mb-2">Ошибка</h5>
+            <p class="text-muted mb-3">Не получилось загрузить данные проекта</p>
+            <div class="text-end">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('cannot_loadPproject_data_dialog').close();">Ок</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Модальное окно создания колонки -->
+    <dialog id="addNewTab_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
+        <form onsubmit="confirmAddTab(event)">
+            <h5 class="mb-3">Новая колонка</h5>
+            <div class="mb-3">
+                <input type="text" id="new_tab_name" class="form-control" placeholder="Название колонки" required>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('addNewTab_dialog').close();">Отмена</button>
+                <button type="submit" class="btn btn-success btn-sm">Создать</button>
+            </div>
         </form>
     </dialog>
 </body>

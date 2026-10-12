@@ -1,4 +1,9 @@
 {
     "liveServer.settings.multiRootWorkspaceName": "MyLittleKanban",
-    "liveServer.settings.root": "/frontend"
+    "liveServer.settings.root": "/frontend",
+    "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/api", //from where you want to proxy. 
+    "proxyUri": "http://127.0.0.1:9254/api/" //the actual url.
+},
 }
