@@ -1,0 +1,8 @@
+[package]
+name = "rustBotCheck"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = "0.4.45"
+sha256 = "1.6.0"

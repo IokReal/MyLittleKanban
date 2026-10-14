@@ -7,6 +7,14 @@ services:
     volumes:
       - ./data:/app/data
 
+  rustBotCheck:
+    build: ./rustBotCheck
+    ports:
+      - "9255:9255"
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+
   nginx:
     image: nginx:alpine
     restart: unless-stopped

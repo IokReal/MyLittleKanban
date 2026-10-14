@@ -24,9 +24,17 @@
                 <div class="task card border shadow-sm p-2" data-task_id="{task_id}">
                     <h5 class="h6 fw-bold text-primary mb-1">{tasks_name}</h5>
                     <p class="small text-muted mb-2">{text}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
                     <button class="btn btn-sm btn-outline-secondary align-self-start" data-task-id="{task_id}"
                         onclick="muveTask(this)">изменить статус</button>
-                    <button class="btn btn-sm btn-outline-secondary align-self-start" data-task_id="{task_id}"></button>
+                    <button class="btn btn-sm btn-outline-secondary align-self-start" data-task_id="{task_id}" onclick="alert('доделать')"><svg
+                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-list" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                        </svg>
+                    </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,8 +141,8 @@
     </dialog>
     <!-- Модальное окно создания колонки -->
     <dialog id="editTask_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
-                <button type="button" class="btn btn-secondary btn-sm btn-text"
-                    onclick="document.getElementById('editTask_dialog').close();">X</button>
+        <button type="button" class="btn btn-secondary btn-sm btn-text"
+            onclick="document.getElementById('editTask_dialog').close();">X</button>
     </dialog>
 </body>
 
