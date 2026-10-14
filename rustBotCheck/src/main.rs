@@ -81,7 +81,7 @@ fn handle_connection(mut stream: TcpStream) {
     }
 
     // `${ip}:${timestamp}:${nonce}:${salt}`
-    let raw_string = format!("{}{}{}{}", ip, data[0], data[1], secret_salt);
+    let raw_string = format!("{}:{}:{}:{}", ip, data[0], data[1], secret_salt);
     let hash = digest(raw_string);
 
     if hash != data[2] {
