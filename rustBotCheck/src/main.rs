@@ -61,13 +61,13 @@ fn handle_connection(mut stream: TcpStream) {
     let data: Vec<&str> = token.split(':').collect(); // ${timestamp}:${nonce}:${hash} 
 
     if data.len() != 3 {
-        print!(" f1");
+        println!(" f1");
         stream.write_all(response403.as_bytes()).unwrap();
         return;
     }
 
     if !data[2].starts_with("0000") {
-        print!(" f2");
+        println!(" f2");
         stream.write_all(response403.as_bytes()).unwrap();
         return;
     }
@@ -75,7 +75,7 @@ fn handle_connection(mut stream: TcpStream) {
     let timestamp = data[0].parse::<i64>().unwrap_or(0);
 
     if (current_utc - timestamp) > 600 || (timestamp - current_utc) > 60 {
-        print!(" f3");
+        println!(" f3 {} {}", current_utc, timestamp);
         stream.write_all(response403.as_bytes()).unwrap();
         return;
     }
@@ -85,11 +85,11 @@ fn handle_connection(mut stream: TcpStream) {
     let hash = digest(raw_string);
 
     if hash != data[2] {
-        print!(" f4");
+        println!(" f4");
         stream.write_all(response403.as_bytes()).unwrap();
         return;
     }
 
-    print!(" ok");
+    println!(" ok");
     stream.write_all(response200.as_bytes()).unwrap();
 }
