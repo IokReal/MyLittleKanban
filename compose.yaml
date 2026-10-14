@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/app/data
+    depends_on:
+      - rustbotcheck
 
   rustbotcheck:
     build: ./rustBotCheck
@@ -24,4 +26,5 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./frontend:/var/www/html:ro
     depends_on:
+      - rustbotcheck
       - backend
