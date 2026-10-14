@@ -7,7 +7,7 @@ services:
     volumes:
       - ./data:/app/data
 
-  rustBotCheck:
+  rustbotcheck:
     build: ./rustBotCheck
     ports:
       - "9255:9255"
