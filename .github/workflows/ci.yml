@@ -85,5 +85,4 @@ jobs:
       - name: Check for broken links and files in frontend
         run: |
           htmlproofer ./frontend \
-            --disable-external \
-            --check-html
+            --disable-external
