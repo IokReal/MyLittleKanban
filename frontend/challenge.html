@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <title>Проверка...</title>
@@ -15,6 +16,7 @@
             height: 100vh;
             margin: 0;
         }
+
         .spinner {
             width: 40px;
             height: 40px;
@@ -24,13 +26,18 @@
             animation: spin 0.8s linear infinite;
             margin-bottom: 20px;
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="spinner"></div>
     <h2>Проверка безопасности...</h2>
-    <h3>Проверти правельность времяни на устройстве</h3>
     <p>Итерация: <span id="nonce">0</span></p>
 
     <script>
@@ -42,12 +49,20 @@
 
         async function init() {
             const ip = "<!--CLIENT_IP-->";
-            const timestamp = Math.floor(Date.now() / 1000);
+            const timestamp = (
+                new Date(
+                    (
+                        await fetch('/', {
+                            method: 'HEAD'
+                        })
+                    ).headers.get("Date")
+                )
+            ).getTime()
             const salt = "BigfishForCat";
             const nonceEl = document.getElementById("nonce");
 
             let nonce = 0;
-            
+
             while (true) {
                 const payload = `${ip}:${timestamp}:${nonce}:${salt}`;
                 const hash = await sha256(payload);
@@ -70,4 +85,5 @@
         init();
     </script>
 </body>
+
 </html>

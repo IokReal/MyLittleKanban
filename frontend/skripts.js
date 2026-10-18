@@ -2,6 +2,8 @@ var tasksData = [];
 var currentMovingTaskId = null; // Переименовано для ясности (хранит ID)
 var currentTargetTabForNewTask = null;
 var selectedProject = null;
+var selectedTaskId = null;
+var selectedTabId = null;
 
 class RULE_TYPE {
     ROOT = 0
@@ -219,6 +221,138 @@ async function validSesion() {
     if (response.status === 401){
         window.location.href = "/login";
         await new Promise(r => setTimeout(r, 100));
+    }
+}
+function edit_task(button) {
+    console.log(button);
+    selectedTaskId = Number(button.dataset.task_id);
+    document.getElementById('editTask_dialog').showModal();
+}
+
+async function delet_task() {
+    if (!selectedTaskId) return;
+
+    try {
+        const res = await fetch(`/api/v1/tasks/${selectedTaskId}`, { method: 'DELETE' });
+        if (res.status === 401) {
+            window.location.href = "/login";
+            return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        document.getElementById('editTask_dialog').close();
+        selectedTaskId = null;
+        await selectProject();   // перезагрузить доску
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось удалить задачу");
+    }
+}
+
+function delete_tab_prompt(button) {
+    selectedTabId = Number(button.dataset.tabId);
+    if (confirm("Вы действительно хотите удалить эту колонку со всеми задачами?")) {
+        delet_tab();
+    }
+}
+
+async function delet_tab() {
+    if (!selectedTabId) return;
+
+    try {
+        const res = await fetch(`/api/v1/groups/${selectedTabId}`, { method: 'DELETE' });
+        if (res.status === 401) {
+            window.location.href = "/login";
+            return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        selectedTabId = null;
+        await selectProject(); // Перезагрузить доску
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось удалить колонку");
+    }
+}
+
+function openAddProjectDialog() {
+    document.getElementById("new_project_name").value = "";
+    document.getElementById("new_project_desc").value = "";
+    document.getElementById("addNewProject_dialog").showModal();
+}
+
+async function confirmAddProject(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("new_project_name").value.trim();
+    const desc = document.getElementById("new_project_desc").value.trim();
+
+    if (!name) return;
+
+    try {
+        const response = await fetch('/api/v1/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, description: desc })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(errText || "Не удалось создать проект");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("addNewProject_dialog").close();
+
+        await updateSelectProject();
+        const projectSelect = document.getElementById("project_select");
+        projectSelect.value = data.project_id;
+        await selectProject();
+
+    } catch (error) {
+        console.error(error);
+        alert("Ошибка при создании проекта: " + error.message);
+    }
+}
+
+async function delet_Project() {
+    if (!selectedProject) {
+        alert("Проект не выбран");
+        return;
+    }
+
+    if (!confirm("Вы действительно хотите удалить этот проект со всеми колонками и задачами?")) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/v1/projects/${selectedProject}`, { method: 'DELETE' });
+        
+        if (res.status === 401) {
+            window.location.href = "/login";
+            return;
+        }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        document.getElementById('manegeProject_dialog').close();
+        
+        selectedProject = null;
+
+        await updateSelectProject();
+        
+        const projectSelect = document.getElementById("project_select");
+        if (projectSelect.options.length > 1) {
+            projectSelect.selectedIndex = 1;
+            await selectProject();
+        } else {
+            tasksData = [];
+            render();
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось удалить проект");
     }
 }
 

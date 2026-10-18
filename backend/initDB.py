@@ -2,7 +2,7 @@
 initDBsql = """
 CREATE TABLE IF NOT EXISTS "project" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "name" TEXT NOT NULL UNIQUE,
+    "name" TEXT NOT NULL,
     "description" TEXT
 );
 
@@ -49,12 +49,13 @@ CREATE TABLE IF NOT EXISTS "ruls_typs" (
 );
 
 CREATE TABLE IF NOT EXISTS "rules" (
-	"id"	INTEGER NOT NULL,
-	"target"	INTEGER NOT NULL,
-	"type"	INTEGER NOT NULL,
-	PRIMARY KEY("id" AUTOINCREMENT),
-	FOREIGN KEY("id") REFERENCES "users"("id"),
-	FOREIGN KEY("type") REFERENCES "ruls_typs"("type")
+    "rule_id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "id" INTEGER NOT NULL,
+    "target"  INTEGER NOT NULL,
+    "type"    INTEGER NOT NULL,
+    FOREIGN KEY("id") REFERENCES "users"("id") ON DELETE CASCADE,
+    FOREIGN KEY("type") REFERENCES "ruls_typs"("type"),
+    UNIQUE("id", "target", "type")
 );
 """
 

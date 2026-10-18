@@ -14,7 +14,11 @@
     <div id="tamplate" class="d-none">
         <div class="tab card bg-light shadow-sm p-3 me-3 flex-shrink-0" style="min-width: 10%; max-width: 20%;"
             data-task_group_id="{task_group_id}">
-            <h4 class="card-title text-dark fw-bold mb-3">{tab_name}</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="card-title text-dark fw-bold mb-0">{tab_name}</h4>
+                <button class="btn btn-sm btn-outline-danger" data-tab-id="{task_group_id}"
+                    onclick="delete_tab_prompt(this)">×</button>
+            </div>
 
             <!-- Кнопка добавления задачи в конкретную колонку -->
             <button class="btn btn-outline-primary btn-sm mb-3 w-100" data-tab-id="{task_group_id}"
@@ -25,15 +29,15 @@
                     <h5 class="h6 fw-bold text-primary mb-1">{tasks_name}</h5>
                     <p class="small text-muted mb-2">{text}</p>
                     <div class="d-flex justify-content-between align-items-center mt-auto">
-                    <button class="btn btn-sm btn-outline-secondary align-self-start" data-task-id="{task_id}"
-                        onclick="muveTask(this)">изменить статус</button>
-                    <button class="btn btn-sm btn-outline-secondary align-self-start" data-task_id="{task_id}" onclick="alert('доделать')"><svg
-                            xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-list" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd"
-                                d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-                        </svg>
-                    </button>
+                        <button class="btn btn-sm btn-outline-secondary align-self-start" data-task-id="{task_id}"
+                            onclick="muveTask(this)">изменить статус</button>
+                        <button class="btn btn-sm btn-outline-secondary align-self-start" data-task_id="{task_id}"
+                            onclick="edit_task(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -68,6 +72,13 @@
                 <select id="project_select" class="form-select form-select-sm w-auto" onchange="selectProject()">
                     <option value="">Загрузка...</option>
                 </select>
+                <button class="btn btn-outline-light btn-sm" onclick="openAddProjectDialog()">+ Новый проект</button>
+                <button class="btn btn-outline-light btn-sm"
+                    onclick="document.getElementById('manegeProject_dialog').showModal();"><svg xmlns="http://www.w3.org/2000/svg"
+                        width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                    </svg></button>
             </div>
         </div>
     </header>
@@ -141,8 +152,31 @@
     </dialog>
     <!-- Модальное окно создания колонки -->
     <dialog id="editTask_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
-        <button type="button" class="btn btn-secondary btn-sm btn-text"
+        <button type="button" class="btn btn-solid btn-sm btn-text"
             onclick="document.getElementById('editTask_dialog').close();">X</button>
+        <button class="btn btn-solid theme-danger" onclick="delet_task()">удолить</button>
+    </dialog>
+    <!-- Модальное окно создания проекта -->
+    <dialog id="addNewProject_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
+        <form onsubmit="confirmAddProject(event)">
+            <h5 class="mb-3">Новый проект</h5>
+            <div class="mb-3">
+                <input type="text" id="new_project_name" class="form-control" placeholder="Название проекта" required>
+            </div>
+            <div class="mb-3">
+                <textarea id="new_project_desc" class="form-control" placeholder="Описание проекта" rows="3"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary btn-sm"
+                    onclick="document.getElementById('addNewProject_dialog').close();">Отмена</button>
+                <button type="submit" class="btn btn-success btn-sm">Создать</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="manegeProject_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
+        <button type="button" class="btn btn-solid btn-sm btn-text"
+            onclick="document.getElementById('manegeProject_dialog').close();">X</button>
+        <button class="btn btn-solid theme-danger" onclick="delet_Project()">удолить</button>
     </dialog>
 </body>
 

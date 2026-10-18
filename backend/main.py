@@ -109,7 +109,6 @@ async def unauthorized_handler(request: Request, exc: UnauthorizedError):
     return response
 
 async def get_current_user_id(login: str | None = Cookie(default=None)) -> int:
-    print(login)
     if not login:
         raise UnauthorizedError()
     
@@ -126,6 +125,9 @@ async def get_current_user_id(login: str | None = Cookie(default=None)) -> int:
 async def login(redirect_to: str = "/",
                 username = Form(""),
                 password = Form("")):
+
+    if password == "" or username == "":
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
     
     cursor = app.state.db.cursor()
 
@@ -142,6 +144,9 @@ async def login(redirect_to: str = "/",
     sesion = secrets.token_urlsafe(32)
     cursor.execute("INSERT INTO sessions VALUES (?, ?, ?);", (sesion, row[1], int(time.time())))
     app.state.db.commit()
+
+    if not redirect_to.startswith("/") or redirect_to.startswith("//"):
+        redirect_to = "/"
 
     response = RedirectResponse(redirect_to, status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="login", value=str(sesion), httponly=True)
@@ -326,6 +331,139 @@ async def add_task(group_id: int, request: Request, user: int = Depends(get_curr
     cursor.execute(
         "INSERT INTO task (name, text, task_group_id) VALUES (?, ?, ?);",
         (task_name, task_text, group_id)
+    )
+    app.state.db.commit()
+
+    return {"status": "success"}
+
+@app.delete("/api/v1/tasks/{task_id}")
+async def delete_task(task_id: int, user: int = Depends(get_current_user_id)):
+    cursor = app.state.db.cursor()
+    
+    task_row = cursor.execute("SELECT task_group_id FROM task WHERE id = ?;", (task_id,)).fetchone()
+    if not task_row:
+        return Response(status_code=404, content="task not found")
+    
+    task_group_id = task_row[0]
+
+    r = ruls_typs
+
+    access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.WRITE_GROUP}, {r.WRITE_TASK}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+        """
+    
+    has_access = cursor.execute(access_query, (user, task_group_id)).fetchone()
+    
+    project_access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = (SELECT project_id FROM task_group WHERE id = ?) AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+
+    if not has_access:
+        has_access = cursor.execute(project_access_query, (user, task_group_id)).fetchone()
+        if not has_access:
+            return Response(status_code=403, content="Forbidden")
+
+    cursor.execute(
+        "DELETE FROM task WHERE id = ?;",
+        (task_id,)
+    )
+    app.state.db.commit()
+
+    return {"status": "success"}
+
+
+@app.delete("/api/v1/groups/{group_id}")
+async def delete_group(group_id: int, user: int = Depends(get_current_user_id)):
+    cursor = app.state.db.cursor()
+    
+    # Находим проект, к которому принадлежит группа
+    group_row = cursor.execute("SELECT project_id FROM task_group WHERE id = ?;", (group_id,)).fetchone()
+    if not group_row:
+        return Response(status_code=404, content="group not found")
+    
+    project_id = group_row[0]
+    r = ruls_typs
+
+    # Проверяем права на уровне группы
+    access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.WRITE_GROUP}, {r.DELETE_PROJ_GROUP}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+    has_access = cursor.execute(access_query, (user, group_id)).fetchone()
+    
+    # Проверяем права на уровне проекта, если на группе нет явного правила
+    project_access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.DELETE_PROJ_GROUP}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+
+    if not has_access:
+        has_access = cursor.execute(project_access_query, (user, project_id)).fetchone()
+        if not has_access:
+            return Response(status_code=403, content="Forbidden")
+
+    # Удаляем группу (благодаря ON DELETE CASCADE в БД задачи внутри тоже удалятся)
+    cursor.execute(
+        "DELETE FROM task_group WHERE id = ?;",
+        (group_id,)
+    )
+    app.state.db.commit()
+
+    return {"status": "success"}
+
+@app.post("/api/v1/projects")
+async def create_project(request: Request, user: int = Depends(get_current_user_id)):
+    body = await request.json()
+    name = body.get("name")
+    description = body.get("description", "")
+
+    if not name:
+        return Response(status_code=400, content="Project name is required")
+
+    cursor = app.state.db.cursor()
+    cursor.execute(
+        "INSERT INTO project (name, description) VALUES (?, ?);",
+        (name, description)
+    )
+    project_id = cursor.lastrowid
+
+    r = ruls_typs
+    cursor.execute(
+        "INSERT INTO rules (id, target, type) VALUES (?, ?, ?);",
+        (user, project_id, r.PROJ_OWN)
+    )
+
+    app.state.db.commit()
+    return JSONResponse(content={"status": "success", "project_id": project_id})
+
+@app.delete("/api/v1/projects/{project_id}")
+async def delete_project(project_id: int, user: int = Depends(get_current_user_id)):
+    cursor = app.state.db.cursor()
+    r = ruls_typs
+    access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.DELETE_PROJ_GROUP}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+    has_access = cursor.execute(access_query, (user, project_id)).fetchone()
+
+    if not has_access:
+        return Response(status_code=403, content="Forbidden")
+
+    cursor.execute(
+        "DELETE FROM project WHERE id = ?;",
+        (project_id,)
     )
     app.state.db.commit()
 
