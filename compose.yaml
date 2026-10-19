@@ -23,7 +23,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx:/etc/nginx:ro
       - ./frontend:/var/www/html:ro
     depends_on:
       - rustbotcheck
