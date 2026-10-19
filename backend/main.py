@@ -6,14 +6,14 @@ from contextlib import asynccontextmanager
 from fastapi import Form, FastAPI, Header, Cookie, Response, status, Depends, Request
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 import hashlib
 import ruls_typs
 import asyncio
 import sqlite3
 import platform
 import time, secrets
-import os
+import os, signal
 
 DB_VERSION = 1
 PROOF_DIFFICULTY = "0000"
@@ -23,6 +23,50 @@ DB_PATH = "/app/data/AppData.db"
 if platform.system() == "Windows":
     DB_PATH = "./../data/AppData.db"
 
+class ProjectEventsManager:
+    def __init__(self):
+        self.list: dict[int, list[asyncio.Queue]] = {}
+        self.closing = False
+
+    async def broadcast(self, project_id: int):
+        if project_id in self.list:
+            for queue in self.list[project_id]:
+                queue.put_nowait("update")
+
+    async def event_generator(self, project_id: int):
+        if self.closing:
+            return
+        queue = asyncio.Queue()
+        
+        if project_id not in self.list:
+            self.list[project_id] = []
+        self.list[project_id].append(queue)
+        
+        try:
+            yield "data: connected\n\n"
+            while True:
+                try:
+                    message = await asyncio.wait_for(queue.get(), timeout=15)
+                except asyncio.TimeoutError:
+                    yield ": ping\n\n"
+                    continue
+                if message is None:
+                    break
+                yield f"data: {message}\n\n"
+        finally:
+            if project_id in self.list and queue in self.list[project_id]:
+                self.list[project_id].remove(queue)
+                if not self.list[project_id]:
+                    del self.list[project_id]
+    def disconnect_all(self):
+        self.closing = True
+        for queues in list(self.list.values()):
+            for queue in list(queues):
+                queue.put_nowait(None)   # не queue.put(None)
+
+
+events_manager = ProjectEventsManager()
+        
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("ЗАПУСК")
@@ -66,8 +110,19 @@ async def lifespan(app: FastAPI):
         cursor.executescript(initDBdata)
         db.commit()
 
-
     cleanup_task = asyncio.create_task(periodic_session_cleanup())
+
+    app.state.loop = asyncio.get_running_loop()
+    loop = app.state.loop
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        saved = signal.getsignal(sig)
+
+        def handler(signo, frame, saved=saved):
+            loop.call_soon_threadsafe(events_manager.disconnect_all)
+            if callable(saved):
+                saved(signo, frame)
+
+        signal.signal(sig, handler)
 
     yield
 
@@ -120,6 +175,38 @@ async def get_current_user_id(login: str | None = Cookie(default=None)) -> int:
         raise UnauthorizedError()
         
     return user[0]
+
+
+
+@app.get("/api/v1/projects/{project_id}/events")
+async def project_events(project_id: int | None = None, user: int = Depends(get_current_user_id)):
+    if not project_id:
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+
+    cursor = app.state.db.cursor()
+    r = ruls_typs
+
+    query = """
+        SELECT 1 
+        FROM rules 
+        WHERE id = ? AND (
+            target = ? 
+            OR target IN (SELECT id FROM task_group WHERE project_id = ?)
+        )
+        LIMIT 1;
+    """
+
+    permision = cursor.execute(query, (user, project_id, project_id)).fetchall()
+
+    if not permision:
+        return Response(status_code=403, content="Forbidden")
+
+    return StreamingResponse(events_manager.event_generator(project_id), 
+                                media_type="text/event-stream",
+                                headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+                             )
+
+    
 
 @app.post("/api/v1/login")
 async def login(redirect_to: str = "/",
@@ -468,3 +555,82 @@ async def delete_project(project_id: int, user: int = Depends(get_current_user_i
     app.state.db.commit()
 
     return {"status": "success"}
+
+@app.post("/api/v1/tasks/{task_id}/move/{group_id}")
+async def move_task(task_id: int, group_id: int, user: int = Depends(get_current_user_id)):
+    cursor = app.state.db.cursor()
+    
+    task_row = cursor.execute("""
+        SELECT t.id, tg.project_id 
+        FROM task t 
+        JOIN task_group tg ON t.task_group_id = tg.id 
+        WHERE t.id = ?;
+    """, (task_id,)).fetchone()
+    
+    if not task_row:
+        return Response(status_code=404, content="Task not found")
+    
+    current_project_id = task_row[1]
+
+    target_group_row = cursor.execute("""
+        SELECT project_id FROM task_group WHERE id = ?;
+    """, (group_id,)).fetchone()
+    
+    if not target_group_row:
+        return Response(status_code=404, content="Target group not found")
+    
+    target_project_id = target_group_row[0]
+
+    if current_project_id != target_project_id:
+        return Response(status_code=400, content="Cannot move task to another project")
+
+    r = ruls_typs
+    access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.WRITE_GROUP}, {r.WRITE_TASK}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+    has_access = cursor.execute(access_query, (user, current_project_id)).fetchone()
+
+    if not has_access:
+        return Response(status_code=403, content="Forbidden")
+
+    # 4. Выполняем перемещение
+    cursor.execute(
+        "UPDATE task SET task_group_id = ? WHERE id = ?;",
+        (group_id, task_id)
+    )
+    app.state.db.commit()
+
+    await events_manager.broadcast(current_project_id)
+
+    return {"status": "success"}
+
+def debug_console(local_vars):
+    import code
+    from time import sleep
+    sleep(3)
+    code.interact(local=local_vars)
+
+if __name__ == "__main__":
+    import uvicorn
+    import threading
+    print("Запуск в режиме разработки/отладки :)")
+
+    def debugBroadcast(project_id: int):
+        """Отправить 'update' подписчикам проекта из консоли."""
+        return asyncio.run_coroutine_threadsafe(
+            events_manager.broadcast(project_id), app.state.loop
+        ).result(timeout=5)
+
+    debug_locals = {
+        "app": app,
+        "events_manager": events_manager,
+        "debugBroadcast": debugBroadcast,
+    }
+
+    threading.Thread(target=debug_console, args=(debug_locals,), daemon=True).start()
+
+    print("Запуск FastAPI сервера...")
+    uvicorn.run(app, host="127.0.0.1", port=9254)

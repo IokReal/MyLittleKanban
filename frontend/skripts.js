@@ -4,6 +4,8 @@ var currentTargetTabForNewTask = null;
 var selectedProject = null;
 var selectedTaskId = null;
 var selectedTabId = null;
+var currentEventSource = null;
+var currentEventSourceId = null;
 
 class RULE_TYPE {
     ROOT = 0
@@ -19,7 +21,7 @@ class RULE_TYPE {
     DELETE_TASK = 10
 }
 
-function render() {
+async function render() {
     const tabsContainer = document.getElementById("tabs");
     tabsContainer.innerHTML = "";
 
@@ -47,7 +49,7 @@ function render() {
     });
 }
 
-function updateDialog() {
+async function updateDialog() {
     const form = document.getElementById("move_dialog_select");
     form.innerHTML = '<option value="" disabled selected>Выберите колонку...</option>';
 
@@ -57,23 +59,40 @@ function updateDialog() {
     });
 }
 
-function muveTask(buttonElement) {
+async function taskDropEvent(event, tableElement) {
+    event.preventDefault();
+    const taskId = Number(event.dataTransfer.getData('task-id'));
+    const targetGroupId = Number(tableElement.dataset.task_group_id);
+    if (!taskId || !targetGroupId) return;
+    await muveTaskIdTo(taskId, targetGroupId);
+
+    render();
+}
+
+async function muveTask(buttonElement) {
     currentMovingTaskId = Number(buttonElement.dataset.taskId);
     updateDialog();
     document.getElementById("move_dialog").showModal();
 }
 
-function confirmMoveTask() {
+async function confirmMoveTask() {
     const select = document.getElementById("move_dialog_select");
     const targetTabId = Number(select.value);
 
     if (!targetTabId || !currentMovingTaskId) return;
 
-    let movedTask = null;
+    await muveTaskIdTo(currentMovingTaskId, targetTabId)
 
+    document.getElementById("move_dialog").close();
+    currentMovingTaskId = null;
+    render();
+}
+
+async function muveTaskIdTo(id, group_id) {
+    let movedTask = null;
     // Ищем и вырезаем задачу по ID
     tasksData.forEach(tab => {
-        const taskIndex = tab.tasks.findIndex(t => t.task_id === currentMovingTaskId);
+        const taskIndex = tab.tasks.findIndex(t => t.task_id === id);
         if (taskIndex !== -1) {
             movedTask = tab.tasks.splice(taskIndex, 1)[0];
         }
@@ -81,19 +100,33 @@ function confirmMoveTask() {
 
     // Добавляем в целевую колонку по ID
     if (movedTask) {
-        const targetTab = tasksData.find(tab => tab.tab_id === targetTabId);
+        const targetTab = tasksData.find(tab => tab.tab_id === group_id);
         if (targetTab) {
             targetTab.tasks.push(movedTask);
         }
     }
+    else { return; }
+    (async function () {
+        try {
+            const response = await fetch(`/api/v1/tasks/${id}/move/${group_id}`, {
+                method: 'post'
+            });
 
-    document.getElementById("move_dialog").close();
-    currentMovingTaskId = null;
-    render();
+            if (!response.ok) {
+                alert('Ошибка при перемещении задачи');
+                await selectProject();
+                return;
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+            await selectProject();
+        }
+
+    })();
 }
 
 // 1. Открытие модального окна создания задачи
-function openAddTaskDialog(buttonElement) {
+async function openAddTaskDialog(buttonElement) {
     currentTargetTabForNewTask = buttonElement.dataset.tabId;
     document.getElementById("new_task_name").value = "";
     document.getElementById("new_task_text").value = "";
@@ -120,7 +153,7 @@ async function confirmAddTask(event) {
 
         document.getElementById("add_task_dialog").close();
         currentTargetTabForNewTask = null;
-        await selectProject();
+        selectProject
     } catch (error) {
         console.error(error);
         alert("Ошибка при создании задачи");
@@ -153,10 +186,41 @@ async function selectProject() {
                 text: t[2],
                 order: t[3]
             }))
-            .sort((a, b) => a.order - b.order)
+                .sort((a, b) => a.order - b.order)
         }));
 
         render();
+        if (currentEventSourceId == selectedProject){
+            return
+        }
+        currentEventSourceId = selectedProject;
+
+        if (currentEventSource) {
+            currentEventSource.close();
+            currentEventSource = null;
+        }
+
+        currentEventSource = new EventSource(`/api/v1/projects/${selectedProject}/events`);
+
+        currentEventSource.onmessage = function (event) {
+            if (event.data === "update") {
+                selectProject();
+            }
+        };
+
+        currentEventSource.onerror = function (err) {
+            console.error("Ошибка SSE соединения:", err);
+
+            if (currentEventSource) {
+                currentEventSource.close();
+                currentEventSource = null;
+            }
+
+            setTimeout(() => {
+                selectProject();
+            }, (Math.random() * 20 + 10) * 1000);
+        };
+
     } catch (error) {
         console.error(error);
         document.getElementById('cannot_loadPproject_data_dialog').showModal();
@@ -170,11 +234,11 @@ async function updateSelectProject() {
     try {
         const response = await fetch('/api/v1/user/projects');
         if (!response.ok) throw new Error("Ошибка авторизации или загрузки");
-        
+
         const projects = await response.json();
-        
+
         projectSelect.innerHTML = '<option value="" disabled selected>Выберите проект...</option>';
-        
+
         projects.forEach(project => {
             const option = document.createElement("option");
             option.value = project[0];
@@ -187,7 +251,7 @@ async function updateSelectProject() {
     }
 }
 
-function openAddTabDialog() {
+async function openAddTabDialog() {
     document.getElementById("new_tab_name").value = "";
     document.getElementById("addNewTab_dialog").showModal();
 }
@@ -218,12 +282,12 @@ async function confirmAddTab(event) {
 }
 async function validSesion() {
     const response = await fetch('/api/v1/user/display_name');
-    if (response.status === 401){
+    if (response.status === 401) {
         window.location.href = "/login";
         await new Promise(r => setTimeout(r, 100));
     }
 }
-function edit_task(button) {
+async function edit_task(button) {
     console.log(button);
     selectedTaskId = Number(button.dataset.task_id);
     document.getElementById('editTask_dialog').showModal();
@@ -249,7 +313,7 @@ async function delet_task() {
     }
 }
 
-function delete_tab_prompt(button) {
+async function delete_tab_prompt(button) {
     selectedTabId = Number(button.dataset.tabId);
     if (confirm("Вы действительно хотите удалить эту колонку со всеми задачами?")) {
         delet_tab();
@@ -275,7 +339,7 @@ async function delet_tab() {
     }
 }
 
-function openAddProjectDialog() {
+async function openAddProjectDialog() {
     document.getElementById("new_project_name").value = "";
     document.getElementById("new_project_desc").value = "";
     document.getElementById("addNewProject_dialog").showModal();
@@ -328,7 +392,7 @@ async function delet_Project() {
 
     try {
         const res = await fetch(`/api/v1/projects/${selectedProject}`, { method: 'DELETE' });
-        
+
         if (res.status === 401) {
             window.location.href = "/login";
             return;
@@ -336,11 +400,11 @@ async function delet_Project() {
         if (!res.ok) throw new Error("HTTP " + res.status);
 
         document.getElementById('manegeProject_dialog').close();
-        
+
         selectedProject = null;
 
         await updateSelectProject();
-        
+
         const projectSelect = document.getElementById("project_select");
         if (projectSelect.options.length > 1) {
             projectSelect.selectedIndex = 1;
@@ -361,10 +425,12 @@ async function init() {
     await validSesion();
 
     await updateSelectProject();
-    
+
     const projectSelect = document.getElementById("project_select");
     if (projectSelect.options.length > 1) {
         projectSelect.selectedIndex = 1;
         await selectProject();
     }
+
+
 }

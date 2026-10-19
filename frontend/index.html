@@ -13,7 +13,8 @@
     <!-- Шаблон карточки и колонки -->
     <div id="tamplate" class="d-none">
         <div class="tab card bg-light shadow-sm p-3 me-3 flex-shrink-0" style="min-width: 10%; max-width: 20%;"
-            data-task_group_id="{task_group_id}">
+            data-task_group_id="{task_group_id}" ondrop="taskDropEvent(event, this)"
+            ondragover="((ev) => {ev.preventDefault();})(event)">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="card-title text-dark fw-bold mb-0">{tab_name}</h4>
                 <button class="btn btn-sm btn-outline-danger" data-tab-id="{task_group_id}"
@@ -26,7 +27,8 @@
 
 
             <div class="tasks-list d-flex flex-column gap-2">
-                <div class="task card border shadow-sm p-2" data-task-id="{task_id}" draggable="true">
+                <div class="task card border shadow-sm p-2" data-task-id="{task_id}" draggable="true"
+                    ondragstart="event.dataTransfer.setData('task-id', this.dataset.taskId)">
                     <h5 class="h6 fw-bold text-primary mb-1">{tasks_name}</h5>
                     <p class="small text-muted mb-2">{text}</p>
                     <div class="d-flex justify-content-between align-items-center mt-auto">
