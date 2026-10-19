@@ -72,7 +72,7 @@ fn handle_connection(mut stream: TcpStream) {
         return;
     }
 
-    let timestamp = data[0].parse::<i64>().unwrap_or(0) / 1000;
+    let timestamp = data[0].parse::<i64>().unwrap_or(0);
 
     if (current_utc - timestamp) > 600 || (timestamp - current_utc) > 60 {
         println!(" f3 {} {}", current_utc, timestamp);

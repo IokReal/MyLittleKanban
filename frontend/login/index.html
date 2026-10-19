@@ -15,7 +15,7 @@
 
         <form action="/api/v1/login" method="POST" class="login-form">
             <div class="form-group">
-                <label for="username">Логин или <s>Email</s></label>
+                <label for="username">Логин <s>или Email</s></label> 
                 <input type="text" name="username" id="username" placeholder="Введите логин" required
                     autocomplete="username">
             </div>
@@ -25,13 +25,12 @@
                 <input type="password" name="password" id="password" placeholder="Введите пароль" required
                     autocomplete="current-password">
             </div>
+            <!-- 
             <div class="otp" data-bs-otp>
                 <input type="text" class="otp-input" maxlength="6" aria-label="Verification code" name="otp" id="otp">
-            </div>
+            </div> 
+            -->
             <button type="submit" class="btn-submit">Войти</button>
-        </form>
-        <form action="/api/v1/login_guest" method="POST" class="login-form">
-            <button type="submit" class="btn-submit">Войти как Гость</button>
         </form>
     </main>
 </body>

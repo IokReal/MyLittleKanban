@@ -24,8 +24,9 @@
             <button class="btn btn-outline-primary btn-sm mb-3 w-100" data-tab-id="{task_group_id}"
                 onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
 
+
             <div class="tasks-list d-flex flex-column gap-2">
-                <div class="task card border shadow-sm p-2" data-task_id="{task_id}">
+                <div class="task card border shadow-sm p-2" data-task-id="{task_id}" draggable="true">
                     <h5 class="h6 fw-bold text-primary mb-1">{tasks_name}</h5>
                     <p class="small text-muted mb-2">{text}</p>
                     <div class="d-flex justify-content-between align-items-center mt-auto">
@@ -74,8 +75,9 @@
                 </select>
                 <button class="btn btn-outline-light btn-sm" onclick="openAddProjectDialog()">+ Новый проект</button>
                 <button class="btn btn-outline-light btn-sm"
-                    onclick="document.getElementById('manegeProject_dialog').showModal();"><svg xmlns="http://www.w3.org/2000/svg"
-                        width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                    onclick="document.getElementById('manegeProject_dialog').showModal();"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
+                        viewBox="0 0 16 16">
                         <path fill-rule="evenodd"
                             d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
                     </svg></button>
@@ -150,12 +152,14 @@
             </div>
         </form>
     </dialog>
+
     <!-- Модальное окно создания колонки -->
     <dialog id="editTask_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 400px; width: 100%;">
         <button type="button" class="btn btn-solid btn-sm btn-text"
             onclick="document.getElementById('editTask_dialog').close();">X</button>
         <button class="btn btn-solid theme-danger" onclick="delet_task()">удолить</button>
     </dialog>
+
     <!-- Модальное окно создания проекта -->
     <dialog id="addNewProject_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
         <form onsubmit="confirmAddProject(event)">
@@ -173,6 +177,8 @@
             </div>
         </form>
     </dialog>
+
+    <!-- диолог упровления проектом -->
     <dialog id="manegeProject_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
         <button type="button" class="btn btn-solid btn-sm btn-text"
             onclick="document.getElementById('manegeProject_dialog').close();">X</button>

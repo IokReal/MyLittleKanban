@@ -57,7 +57,7 @@
                         })
                     ).headers.get("Date")
                 )
-            ).getTime()
+            ).getTime() / 1000;
             const salt = "BigfishForCat";
             const nonceEl = document.getElementById("nonce");
 
