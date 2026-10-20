@@ -383,6 +383,8 @@ async def add_group(selectedProject: int, request: Request, user: int = Depends(
         (group_name, selectedProject)
     )
     app.state.db.commit()
+
+    await events_manager.broadcast(selectedProject)
     
     return {"status": "success"}
 
@@ -420,6 +422,8 @@ async def add_task(group_id: int, request: Request, user: int = Depends(get_curr
         (task_name, task_text, group_id)
     )
     app.state.db.commit()
+
+    await events_manager.broadcast(project_id)
 
     return {"status": "success"}
 
@@ -460,7 +464,12 @@ async def delete_task(task_id: int, user: int = Depends(get_current_user_id)):
         "DELETE FROM task WHERE id = ?;",
         (task_id,)
     )
+
     app.state.db.commit()
+
+    project_id = cursor.execute("SELECT project_id FROM task_group WHERE id = ?;", (task_id,)).fetchone()
+    if project_id:
+        await events_manager.broadcast(project_id[0])
 
     return {"status": "success"}
 
@@ -505,6 +514,8 @@ async def delete_group(group_id: int, user: int = Depends(get_current_user_id)):
         (group_id,)
     )
     app.state.db.commit()
+
+    await events_manager.broadcast(project_id)
 
     return {"status": "success"}
 
@@ -553,6 +564,8 @@ async def delete_project(project_id: int, user: int = Depends(get_current_user_i
         (project_id,)
     )
     app.state.db.commit()
+
+    await events_manager.broadcast(project_id)
 
     return {"status": "success"}
 

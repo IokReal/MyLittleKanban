@@ -114,12 +114,12 @@ async function muveTaskIdTo(id, group_id) {
 
             if (!response.ok) {
                 alert('Ошибка при перемещении задачи');
-                await selectProject();
+                //await selectProject();
                 return;
             }
         } catch (error) {
             console.error('Ошибка сети:', error);
-            await selectProject();
+            //await selectProject();
         }
 
     })();
@@ -153,7 +153,7 @@ async function confirmAddTask(event) {
 
         document.getElementById("add_task_dialog").close();
         currentTargetTabForNewTask = null;
-        selectProject
+        //selectProject();
     } catch (error) {
         console.error(error);
         alert("Ошибка при создании задачи");
@@ -210,6 +210,7 @@ async function selectProject() {
 
         currentEventSource.onerror = function (err) {
             console.error("Ошибка SSE соединения:", err);
+            alert("Ошибка SSE соединения")
 
             if (currentEventSource) {
                 currentEventSource.close();
@@ -274,7 +275,7 @@ async function confirmAddTab(event) {
         if (!response.ok) throw new Error("Не удалось создать колонку на сервере");
 
         document.getElementById("addNewTab_dialog").close();
-        await selectProject();
+        //await selectProject();
     } catch (error) {
         console.error(error);
         alert("Ошибка при создании колонки");
@@ -306,7 +307,7 @@ async function delet_task() {
 
         document.getElementById('editTask_dialog').close();
         selectedTaskId = null;
-        await selectProject();   // перезагрузить доску
+        //await selectProject();   // перезагрузить доску
     } catch (error) {
         console.error(error);
         alert("Не удалось удалить задачу");
@@ -332,7 +333,7 @@ async function delet_tab() {
         if (!res.ok) throw new Error("HTTP " + res.status);
 
         selectedTabId = null;
-        await selectProject(); // Перезагрузить доску
+        //await selectProject(); // Перезагрузить доску
     } catch (error) {
         console.error(error);
         alert("Не удалось удалить колонку");
@@ -431,6 +432,4 @@ async function init() {
         projectSelect.selectedIndex = 1;
         await selectProject();
     }
-
-
 }

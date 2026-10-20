@@ -15,6 +15,7 @@
         <div class="tab card bg-light shadow-sm p-3 me-3 flex-shrink-0" style="min-width: 10%; max-width: 20%;"
             data-task_group_id="{task_group_id}" ondrop="taskDropEvent(event, this)"
             ondragover="((ev) => {ev.preventDefault();})(event)">
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="card-title text-dark fw-bold mb-0">{tab_name}</h4>
                 <button class="btn btn-sm btn-outline-danger" data-tab-id="{task_group_id}"
@@ -24,7 +25,6 @@
             <!-- Кнопка добавления задачи в конкретную колонку -->
             <button class="btn btn-outline-primary btn-sm mb-3 w-100" data-tab-id="{task_group_id}"
                 onclick="openAddTaskDialog(this)">+ Добавить задачу</button>
-
 
             <div class="tasks-list d-flex flex-column gap-2">
                 <div class="task card border shadow-sm p-2" data-task-id="{task_id}" draggable="true"
@@ -181,10 +181,27 @@
     </dialog>
 
     <!-- диолог упровления проектом -->
-    <dialog id="manegeProject_dialog" class="p-4 border-0 rounded shadow-lg" style="max-width: 450px; width: 100%;">
-        <button type="button" class="btn btn-solid btn-sm btn-text"
-            onclick="document.getElementById('manegeProject_dialog').close();">X</button>
-        <button class="btn btn-solid theme-danger" onclick="delet_Project()">удолить</button>
+    <dialog id="manegeProject_dialog" class="p-4 border-0 rounded shadow-lg h-100 m-0" style="position: fixed; top: 0; right: 0; left: auto; max-width: 450px; width: 100%;">
+        <div class="d-flex flex-column mb-3 gap-3 h-100">
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-solid btn-sm btn-text"
+                    onclick="document.getElementById('manegeProject_dialog').close();">X</button>
+            </div>
+            <h2>Переименовать</h2>
+            <div>
+                <div class="mb-3 d-flex gap-2">
+                    <input type="text" id="new_project_name" class="form-control" placeholder="Название проекта"
+                        required>
+                    <button class="btn btn-solid theme-success">Ok</button>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-solid theme-danger" onclick="delet_Project()">удолить Проэкт</button>
+            </div>
+            <div>
+                <a href="/logout" class="btn btn-solid theme-danger">Выйли из аккаунта</a>
+            </div>
+        </div>
     </dialog>
 </body>
 
