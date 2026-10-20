@@ -1,3 +1,4 @@
+# compose.yaml
 services:
   backend:
     build: ./backend
@@ -5,7 +6,7 @@ services:
       - "9254:9254"
     restart: unless-stopped
     volumes:
-      - ./data:/app/data
+      - kanban_data:/app/data
     depends_on:
       - rustbotcheck
 
@@ -22,8 +23,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80"
-    volumes:
-      - ./frontend:/var/www/html:ro
     depends_on:
       - rustbotcheck
       - backend
+volumes:
+  kanban_data:
