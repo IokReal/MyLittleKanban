@@ -86,3 +86,13 @@ jobs:
         run: |
           htmlproofer ./frontend \
             --disable-external
+  deploy:
+    needs: docker-compose-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: Trigger Portainer Webhook
+        env:
+          WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+        run: |
+          curl -X POST "$WEBHOOK_URL"
