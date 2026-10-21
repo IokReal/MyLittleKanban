@@ -620,6 +620,48 @@ async def move_task(task_id: int, group_id: int, user: int = Depends(get_current
 
     return {"status": "success"}
 
+
+@app.post("/api/v1/projects/{project_id}/rename")
+async def rename_project(request: Request, project_id: int, user: int = Depends(get_current_user_id)):
+    body = await request.json()
+    name = body.get("name")
+
+    if not name or not isinstance(name, str):
+        return Response(status_code=400, content="Name is required")
+
+    name = name.strip()
+
+    if len(name) < 3:
+        return Response(status_code=400, content="name to smol")
+
+    if len(name) > 20:
+        return Response(status_code=400, content="name to large")
+
+    cursor = app.state.db.cursor()
+
+    r = ruls_typs
+    access_query = f"""
+        SELECT 1 FROM rules 
+        WHERE id = ? AND target = ? AND type IN (
+            {r.ROOT}, {r.PROJ_OWN}, {r.WRITE_PROJ}, {r.MANAGE_MEMBERS}
+        )
+    """
+    has_access = cursor.execute(access_query, (user, project_id)).fetchone()
+
+    if not has_access:
+        return Response(status_code=403, content="Forbidden")
+
+    cursor.execute(
+        "UPDATE project SET name = ? WHERE id = ?;",
+        (name, project_id)
+    )
+    app.state.db.commit()
+
+    await events_manager.broadcast(project_id)
+
+    return {"status": "success"}
+
+
 def debug_console(local_vars):
     import code
     from time import sleep
