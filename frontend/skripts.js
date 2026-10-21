@@ -190,7 +190,7 @@ async function selectProject() {
         }));
 
         render();
-        if (currentEventSourceId == selectedProject){
+        if (currentEventSourceId == selectedProject) {
             return
         }
         currentEventSourceId = selectedProject;
@@ -419,6 +419,16 @@ async function delet_Project() {
         console.error(error);
         alert("Не удалось удалить проект");
     }
+}
+async function renameProject() {
+    const nname = document.getElementById("rename_project_name").value;
+    const res = await fetch(`/api/v1/projects/${selectedProject}/rename`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nname })
+    })
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    await updateSelectProject();
 }
 
 async function init() {
